@@ -53,7 +53,7 @@ fn test_endian_mode() {
     dbg!(endian_mode().unwrap());
 }
 
-#[cfg(target_arch = "mips")]
+#[cfg(any(target_arch = "mips", target_arch = "mips32r6"))]
 #[test]
 fn test_floating_point_mode() {
     dbg!(floating_point_mode().unwrap());
@@ -217,7 +217,7 @@ fn is_linux_kernel_config_item_enabled(config: &[u8], name: &str) -> io::Result<
                 if let Some(mut value) = iter.next().map(str::trim) {
                     if value.starts_with('"') && value.ends_with('"') {
                         // Just remove the quotes, but don't bother unescaping the inner string
-                        // because we are only trying to find out if the option is an true boolean.
+                        // because we are only trying to find out if the option is a true boolean.
                         value = &value[1..(value.len() - 2)];
                     }
 

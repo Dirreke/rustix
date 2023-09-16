@@ -72,7 +72,7 @@ pub struct Termios {
 }
 
 impl Termios {
-    /// `cfmakeraw(self)`—Set a `Termios` value to the settings for "raw" mode.
+    /// `cfmakeraw(self)`—Set a `Termios` value to the settings for “raw” mode.
     ///
     /// In raw mode, input is available a byte at a time, echoing is disabled,
     /// and special terminal input and output codes are disabled.
@@ -264,7 +264,7 @@ bitflags! {
         const ICRNL = c::ICRNL;
 
         /// `IUCLC`
-        #[cfg(any(linux_kernel, solarish, target_os = "haiku"))]
+        #[cfg(any(linux_kernel, solarish, target_os = "aix", target_os = "haiku", target_os = "nto"))]
         const IUCLC = c::IUCLC;
 
         /// `IXON`
@@ -292,6 +292,9 @@ bitflags! {
             target_os = "redox",
         )))]
         const IUTF8 = c::IUTF8;
+
+        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        const _ = !0;
     }
 }
 
@@ -504,6 +507,9 @@ bitflags! {
             target_os = "redox",
         )))]
         const VT1 = c::VT1;
+
+        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        const _ = !0;
     }
 }
 
@@ -564,11 +570,14 @@ bitflags! {
             target_os = "redox",
         )))]
         const CMSPAR = c::CMSPAR;
+
+        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        const _ = !0;
     }
 }
 
 bitflags! {
-    /// Flags controlling "local" terminal modes.
+    /// Flags controlling “local” terminal modes.
     #[repr(transparent)]
     #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
     pub struct LocalModes: c::tcflag_t {
@@ -627,6 +636,9 @@ bitflags! {
 
         /// `IEXTEN`
         const IEXTEN = c::IEXTEN;
+
+        /// <https://docs.rs/bitflags/latest/bitflags/#externally-defined-flags>
+        const _ = !0;
     }
 }
 
@@ -1273,7 +1285,9 @@ fn termios_layouts() {
                 target_env = "gnu",
                 any(
                     target_arch = "mips",
+                    target_arch = "mips32r6",
                     target_arch = "mips64",
+                    target_arch = "mips64r6",
                     target_arch = "sparc",
                     target_arch = "sparc64"
                 )
@@ -1286,7 +1300,9 @@ fn termios_layouts() {
                 target_env = "gnu",
                 any(
                     target_arch = "mips",
+                    target_arch = "mips32r6",
                     target_arch = "mips64",
+                    target_arch = "mips64r6",
                     target_arch = "sparc",
                     target_arch = "sparc64"
                 )
@@ -1388,13 +1404,23 @@ fn termios_ioctl_contiguity() {
     const_assert_eq!(c::TCSAFLUSH - c::TCSANOW, 2);
 
     // MIPS is different here.
-    #[cfg(any(target_arch = "mips", target_arch = "mips64"))]
+    #[cfg(any(
+        target_arch = "mips",
+        target_arch = "mips32r6",
+        target_arch = "mips64",
+        target_arch = "mips64r6"
+    ))]
     {
         assert_eq!(i128::from(c::TCSANOW) - i128::from(c::TCSETS), 0);
         assert_eq!(i128::from(c::TCSADRAIN) - i128::from(c::TCSETS), 1);
         assert_eq!(i128::from(c::TCSAFLUSH) - i128::from(c::TCSETS), 2);
     }
-    #[cfg(not(any(target_arch = "mips", target_arch = "mips64")))]
+    #[cfg(not(any(
+        target_arch = "mips",
+        target_arch = "mips32r6",
+        target_arch = "mips64",
+        target_arch = "mips64r6"
+    )))]
     {
         const_assert_eq!(c::TCSANOW, 0);
         const_assert_eq!(c::TCSADRAIN, 1);

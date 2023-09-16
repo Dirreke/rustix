@@ -144,8 +144,8 @@ pub(in crate::backend) unsafe fn indirect_syscall5(
     let r0;
     // Oof. a3 should go in esi, and `asm!` won't let us use that register as
     // an operand. And we can't request stack slots. And there are no other
-    // registers free. Use eax as a temporary pointer to a slice, since it
-    // gets clobbered as the return value anyway.
+    // registers free. Use eax as a temporary pointer to a slice, since it gets
+    // clobbered as the return value anyway.
     asm!(
         "push esi",
         "push DWORD PTR [eax + 0]",
@@ -248,7 +248,7 @@ pub(in crate::backend) unsafe fn syscall1_noreturn(nr: SyscallNumber<'_>, a0: Ar
         "int $$0x80",
         in("eax") nr.to_asm(),
         in("ebx") a0.to_asm(),
-        options(noreturn)
+        options(nostack, noreturn)
     )
 }
 

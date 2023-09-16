@@ -9,6 +9,8 @@ fn test_file() {
     )
     .unwrap();
 
+    rustix::fs::chown("Cargo.toml", None, None).unwrap();
+
     #[cfg(not(any(target_os = "emscripten", target_os = "android")))]
     #[allow(unreachable_patterns)]
     match rustix::fs::accessat(
@@ -66,6 +68,8 @@ fn test_file() {
     )
     .unwrap();
 
+    rustix::fs::fchown(&file, None, None).unwrap();
+
     assert_eq!(
         rustix::fs::openat(
             &file,
@@ -99,14 +103,32 @@ fn test_file() {
     )))]
     rustix::fs::fdatasync(&file).unwrap();
 
+    // Test `fcntl_getfd`.
     assert_eq!(
         rustix::io::fcntl_getfd(&file).unwrap(),
         rustix::io::FdFlags::empty()
     );
-    // Use `from_bits_truncate` to ignore `O_LARGEFILE` if present.
+
+    // Test `fcntl_getfl`.
+    let fl = rustix::fs::fcntl_getfl(&file).unwrap();
+
+    // On Linux, rustix automatically sets `O_LARGEFILE`, so clear it here so
+    // that we can test that no other bits are present.
+    #[cfg(linux_kernel)]
+    let fl = fl - rustix::fs::OFlags::from_bits_retain(linux_raw_sys::general::O_LARGEFILE);
+
+    // On illumos, the system automatically sets `O_LARGEFILE`, so clear it
+    // here so that we can test that no other bits are present.
+    #[cfg(target_os = "illumos")]
+    let fl = fl - rustix::fs::OFlags::from_bits_retain(0x2000);
+
+    assert_eq!(fl, rustix::fs::OFlags::empty());
+
+    // Test `fcntl_setfd`.
+    rustix::io::fcntl_setfd(&file, rustix::io::FdFlags::CLOEXEC).unwrap();
     assert_eq!(
-        rustix::fs::OFlags::from_bits_truncate(rustix::fs::fcntl_getfl(&file).unwrap().bits()),
-        rustix::fs::OFlags::empty()
+        rustix::io::fcntl_getfd(&file).unwrap(),
+        rustix::io::FdFlags::CLOEXEC
     );
 
     let stat = rustix::fs::fstat(&file).unwrap();

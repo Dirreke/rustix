@@ -11,8 +11,9 @@ use crate::fd::BorrowedFd;
 /// [`clock_gettime`]: crate::time::clock_gettime
 #[cfg(not(any(apple, target_os = "wasi")))]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-#[cfg_attr(not(target_os = "dragonfly"), repr(i32))]
+#[cfg_attr(not(any(target_os = "aix", target_os = "dragonfly")), repr(i32))]
 #[cfg_attr(target_os = "dragonfly", repr(u64))]
+#[cfg_attr(target_os = "aix", repr(i64))]
 #[non_exhaustive]
 pub enum ClockId {
     /// `CLOCK_REALTIME`
@@ -52,6 +53,8 @@ pub enum ClockId {
 /// has to fail with `INVAL` due to an unsupported clock. See
 /// [`DynamicClockId`] for a greater set of clocks, with the caveat that not
 /// all of them are always supported.
+///
+/// [`clock_gettime`]: crate::time::clock_gettime
 #[cfg(apple)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 #[repr(u32)]
@@ -96,10 +99,15 @@ pub enum DynamicClockId<'a> {
     Tai,
 
     /// `CLOCK_BOOTTIME`, available on Linux >= 2.6.39
-    #[cfg(any(linux_kernel, target_os = "openbsd"))]
+    #[cfg(any(
+        freebsdlike,
+        linux_kernel,
+        target_os = "fuchsia",
+        target_os = "openbsd"
+    ))]
     Boottime,
 
     /// `CLOCK_BOOTTIME_ALARM`, available on Linux >= 2.6.39
-    #[cfg(linux_kernel)]
+    #[cfg(any(linux_kernel, target_os = "fuchsia"))]
     BoottimeAlarm,
 }

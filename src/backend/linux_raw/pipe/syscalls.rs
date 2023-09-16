@@ -23,7 +23,9 @@ pub(crate) fn pipe() -> io::Result<(OwnedFd, OwnedFd)> {
     #[cfg(any(
         target_arch = "aarch64",
         target_arch = "mips",
+        target_arch = "mips32r6",
         target_arch = "mips64",
+        target_arch = "mips64r6",
         target_arch = "riscv64",
     ))]
     {
@@ -32,7 +34,9 @@ pub(crate) fn pipe() -> io::Result<(OwnedFd, OwnedFd)> {
     #[cfg(not(any(
         target_arch = "aarch64",
         target_arch = "mips",
+        target_arch = "mips32r6",
         target_arch = "mips64",
+        target_arch = "mips64r6",
         target_arch = "riscv64",
     )))]
     unsafe {
@@ -55,9 +59,9 @@ pub(crate) fn pipe_with(flags: PipeFlags) -> io::Result<(OwnedFd, OwnedFd)> {
 
 #[inline]
 pub fn splice(
-    fd_in: BorrowedFd,
+    fd_in: BorrowedFd<'_>,
     off_in: Option<&mut u64>,
-    fd_out: BorrowedFd,
+    fd_out: BorrowedFd<'_>,
     off_out: Option<&mut u64>,
     len: usize,
     flags: SpliceFlags,
@@ -77,8 +81,8 @@ pub fn splice(
 
 #[inline]
 pub unsafe fn vmsplice(
-    fd: BorrowedFd,
-    bufs: &[IoSliceRaw],
+    fd: BorrowedFd<'_>,
+    bufs: &[IoSliceRaw<'_>],
     flags: SpliceFlags,
 ) -> io::Result<usize> {
     let (bufs_addr, bufs_len) = slice(&bufs[..cmp::min(bufs.len(), MAX_IOV)]);
@@ -87,8 +91,8 @@ pub unsafe fn vmsplice(
 
 #[inline]
 pub fn tee(
-    fd_in: BorrowedFd,
-    fd_out: BorrowedFd,
+    fd_in: BorrowedFd<'_>,
+    fd_out: BorrowedFd<'_>,
     len: usize,
     flags: SpliceFlags,
 ) -> io::Result<usize> {

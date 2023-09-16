@@ -15,7 +15,7 @@ use crate::backend::reg::{
 use core::arch::asm;
 
 #[inline]
-pub(in crate::backend) unsafe fn syscall0_readonly(nr: SyscallNumber) -> RetReg<R0> {
+pub(in crate::backend) unsafe fn syscall0_readonly(nr: SyscallNumber<'_>) -> RetReg<R0> {
     let r0;
     asm!(
         "sc",
@@ -98,7 +98,7 @@ pub(in crate::backend) unsafe fn syscall1_noreturn(nr: SyscallNumber<'_>, a0: Ar
         "sc",
         in("r0") nr.to_asm(),
         in("r3") a0.to_asm(),
-        options(noreturn)
+        options(nostack, noreturn)
     )
 }
 

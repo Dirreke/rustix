@@ -1,6 +1,6 @@
 [package]
 name = "rustix"
-version = "0.38.4"
+version = "0.38.13"
 authors = [
     "Dan Gohman <dev@sunfishcode.online>",
     "Jakub Konka <kubkon@jakubkonka.com>",
@@ -16,7 +16,7 @@ include = ["src", "build.rs", "Cargo.toml", "COPYRIGHT", "LICENSE*", "/*.md", "b
 rust-version = "1.63"
 
 [dependencies]
-bitflags = { version = "2.3.3", default-features = false }
+bitflags = { version = "2.4.0", default-features = false }
 itoa = { version = "1.0.1", default-features = false, optional = true }
 
 # Special dependencies used in rustc-dep-of-std mode.
@@ -25,6 +25,7 @@ alloc = { version = "1.0.0", optional = true, package = "rustc-std-workspace-all
 compiler_builtins = { version = '0.1.49', optional = true }
 
 # The procfs feature needs once_cell.
+# With Rust 1.70.0, we can switch to `core::cell::OnceCell`.
 [target.'cfg(any(target_os = "android", target_os = "linux"))'.dependencies]
 once_cell = { version = "1.5.2", optional = true }
 
@@ -34,24 +35,24 @@ once_cell = { version = "1.5.2", optional = true }
 # addition to the libc backend. The linux_raw backend is used by default. The
 # libc backend can be selected via adding `--cfg=rustix_use_libc` to
 # `RUSTFLAGS` or enabling the `use-libc` cargo feature.
-[target.'cfg(all(not(rustix_use_libc), not(miri), target_os = "linux", target_endian = "little", any(target_arch = "arm", all(target_arch = "aarch64", target_pointer_width = "64"), target_arch = "riscv64", all(rustix_use_experimental_asm, target_arch = "powerpc64"), all(rustix_use_experimental_asm, target_arch = "mips"), all(rustix_use_experimental_asm, target_arch = "mips64"), target_arch = "x86", all(target_arch = "x86_64", target_pointer_width = "64"))))'.dependencies]
-linux-raw-sys = { version = "0.4.3", default-features = false, features = ["general", "errno", "ioctl", "no_std"] }
+[target.'cfg(all(not(rustix_use_libc), not(miri), target_os = "linux", target_endian = "little", any(target_arch = "arm", all(target_arch = "aarch64", target_pointer_width = "64"), target_arch = "riscv64", all(rustix_use_experimental_asm, target_arch = "powerpc64"), all(rustix_use_experimental_asm, target_arch = "mips"), all(rustix_use_experimental_asm, target_arch = "mips32r6"), all(rustix_use_experimental_asm, target_arch = "mips64"), all(rustix_use_experimental_asm, target_arch = "mips64r6"), target_arch = "x86", all(target_arch = "x86_64", target_pointer_width = "64"))))'.dependencies]
+linux-raw-sys = { version = "0.4.7", default-features = false, features = ["general", "errno", "ioctl", "no_std", "elf"] }
 libc_errno = { package = "errno", version = "0.3.1", default-features = false, optional = true }
-libc = { version = "0.2.147", features = ["extra_traits"], optional = true }
+libc = { version = "0.2.147", default-features = false, features = ["extra_traits"], optional = true }
 
 # Dependencies for platforms where only libc is supported:
 #
 # On all other Unix-family platforms, and under Miri, we always use the libc
 # backend, so enable its dependencies unconditionally.
-[target.'cfg(all(not(windows), any(rustix_use_libc, miri, not(all(target_os = "linux", target_endian = "little", any(target_arch = "arm", all(target_arch = "aarch64", target_pointer_width = "64"), target_arch = "riscv64", all(rustix_use_experimental_asm, target_arch = "powerpc64"), all(rustix_use_experimental_asm, target_arch = "mips"), all(rustix_use_experimental_asm, target_arch = "mips64"), target_arch = "x86", all(target_arch = "x86_64", target_pointer_width = "64")))))))'.dependencies]
+[target.'cfg(all(not(windows), any(rustix_use_libc, miri, not(all(target_os = "linux", target_endian = "little", any(target_arch = "arm", all(target_arch = "aarch64", target_pointer_width = "64"), target_arch = "riscv64", all(rustix_use_experimental_asm, target_arch = "powerpc64"), all(rustix_use_experimental_asm, target_arch = "mips"), all(rustix_use_experimental_asm, target_arch = "mips32r6"), all(rustix_use_experimental_asm, target_arch = "mips64"), all(rustix_use_experimental_asm, target_arch = "mips64r6"), target_arch = "x86", all(target_arch = "x86_64", target_pointer_width = "64")))))))'.dependencies]
 libc_errno = { package = "errno", version = "0.3.1", default-features = false }
-libc = { version = "0.2.147", features = ["extra_traits"] }
+libc = { version = "0.2.147", default-features = false, features = ["extra_traits"] }
 
 # Additional dependencies for Linux with the libc backend:
 #
 # Some syscalls do not have libc wrappers, such as in `io_uring`. For these,
 # the libc backend uses the linux-raw-sys ABI and `libc::syscall`.
-[target.'cfg(all(any(target_os = "android", target_os = "linux"), any(rustix_use_libc, miri, not(all(target_os = "linux", target_endian = "little", any(target_arch = "arm", all(target_arch = "aarch64", target_pointer_width = "64"), target_arch = "riscv64", all(rustix_use_experimental_asm, target_arch = "powerpc64"), all(rustix_use_experimental_asm, target_arch = "mips"), all(rustix_use_experimental_asm, target_arch = "mips64"), target_arch = "x86", all(target_arch = "x86_64", target_pointer_width = "64")))))))'.dependencies]
+[target.'cfg(all(any(target_os = "android", target_os = "linux"), any(rustix_use_libc, miri, not(all(target_os = "linux", target_endian = "little", any(target_arch = "arm", all(target_arch = "aarch64", target_pointer_width = "64"), target_arch = "riscv64", all(rustix_use_experimental_asm, target_arch = "powerpc64"), all(rustix_use_experimental_asm, target_arch = "mips"), all(rustix_use_experimental_asm, target_arch = "mips32r6"), all(rustix_use_experimental_asm, target_arch = "mips64"), all(rustix_use_experimental_asm, target_arch = "mips64r6"), target_arch = "x86", all(target_arch = "x86_64", target_pointer_width = "64")))))))'.dependencies]
 linux-raw-sys = { version = "0.4.3", default-features = false, features = ["general", "ioctl", "no_std"] }
 
 # For the libc backend on Windows, use the Winsock2 API in windows-sys.
@@ -122,16 +123,7 @@ default = ["std", "use-libc-auxv"]
 
 # This enables use of std. Disabling this enables `#![no_std], and requires
 # Rust 1.64 or newer.
-std = ["bitflags/std"]
-
-# This is used in the port of std to rustix.
-rustc-dep-of-std = [
-    "core",
-    "alloc",
-    "compiler_builtins",
-    "linux-raw-sys/rustc-dep-of-std",
-    "bitflags/rustc-dep-of-std",
-]
+std = ["bitflags/std", "alloc", "libc?/std", "libc_errno?/std"]
 
 # Enable this to request the libc backend.
 use-libc = ["libc_errno", "libc"]
@@ -144,6 +136,9 @@ fs = []
 
 # Enable `rustix::io_uring::*` (on platforms that support it).
 io_uring = ["fs", "net", "linux-raw-sys/io_uring"]
+
+# Enable `rustix::mount::*`.
+mount = []
 
 # Enable `rustix::net::*`.
 net = ["linux-raw-sys/net", "linux-raw-sys/netlink", "linux-raw-sys/if_ether"]
@@ -194,6 +189,7 @@ all-apis = [
     "fs",
     "io_uring",
     "mm",
+    "mount",
     "net",
     "param",
     "pipe",
@@ -209,10 +205,15 @@ all-apis = [
     "time",
 ]
 
-# When using the linux_raw backend, and not using Mustang, should we use libc
-# for reading the aux vectors, instead of reading them ourselves from
-# /proc/self/auxv?
+# When using the linux_raw backend, should we use libc for reading the aux
+# vectors, instead of reading them ourselves from /proc/self/auxv?
 use-libc-auxv = []
+
+# Enable "use-explicitly-provided-auxv" mode, with a public
+# `rustix::param::init` function that must be called before anything else in
+# rustix. This is unstable and experimental and not intended for
+# general-purpose use.
+use-explicitly-provided-auxv = []
 
 # OS compatibility features
 
@@ -221,6 +222,21 @@ linux_4_11 = []
 
 # Enable all optimizations for the latest Linux versions.
 linux_latest = ["linux_4_11"]
+
+# Enable features which depend on the Rust global allocator, such as functions
+# that return owned strings or `Vec`s.
+alloc = []
+
+# This is used in the port of std to rustix. This is experimental and not meant
+# for regular use.
+rustc-dep-of-std = [
+    "dep:core",
+    "dep:alloc",
+    "dep:compiler_builtins",
+    "linux-raw-sys/rustc-dep-of-std",
+    "bitflags/rustc-dep-of-std",
+    "compiler_builtins?/rustc-dep-of-std",
+]
 
 # Obsolete and deprecated.
 cc = []
